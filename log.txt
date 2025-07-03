@@ -1,0 +1,16 @@
+monitor is off
+2025-07-01 00:00:07.631321
+
+.
+.
+monitor is on
+volume is on
+2025-07-01 14:23:05.471177
+
+mins 0
+mins 1
+mins 2
+mins 3
+mins 4
+mins 5
+mins 6
