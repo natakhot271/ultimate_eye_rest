@@ -1,5 +1,6 @@
 import wmi
 import time
+import os
 from datetime import datetime
 #from playsound import playsound
 from scipy.io import wavfile
@@ -127,7 +128,39 @@ def notify_eye_break(state):
         notification_str += '\n\nVolume is off'
     send_notification("20 20 20", notification_str)
 
+def is_log_active():
+    """Check if another instance is already running based on recent log activity."""
+    log_file = "C:\\Users\\natal\\Documents\\ultimate_eye_rest\\log.txt"
+    
+    if not os.path.exists(log_file):
+        return False
+    
+    with open(log_file, 'r') as file:
+        lines = file.readlines()
+        if not lines:
+            return False
+        
+        # Check the last line only
+        last_line = lines[-1].strip()
+        if not last_line:
+            return False
+        
+        try:
+            last_time = datetime.fromisoformat(last_line)
+            time_diff_seconds = (datetime.now() - last_time).total_seconds()
+            return time_diff_seconds <= (MINUTES + 1) * 60
+        except ValueError:
+            return False
+
+    return False
+
+MINUTES = 17
+
 if __name__ == "__main__":
+    if is_log_active():
+        print("Program already running. Exiting.")
+        exit()
+    
     awake = True
     day = datetime.now().day
     i = 0
@@ -148,15 +181,14 @@ if __name__ == "__main__":
             else:
                 log('volume is off')
 
-            log(str(datetime.now())+'\n')
-
         while is_monitor_on() and day == datetime.now().day:
-            for i in range(17):
+            for i in range(MINUTES):
                 log('mins '+str(i))
                 time.sleep(60)
                 if not is_monitor_on():
                     break
             log('mins'+str(i+1))
+            log(str(datetime.now())+'\n')
 
             try:
                 notify_eye_break("start")
