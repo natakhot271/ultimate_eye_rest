@@ -1,3 +1,10 @@
 monitor is on
 volume is on
 mins 0
+mins 1
+mins 2
+mins 3
+mins 4
+mins 5
+mins 6
+mins 7

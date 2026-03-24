@@ -47,12 +47,14 @@ cscript 20_20_20.vbs
 
 ## How It Works
 
-1. **Initialization**: Loads audio file and initializes system audio interface
-2. **Monitor Check**: Continuously monitors if your display is active
-3. **Eye Break Timer**: When 20 minutes elapse with monitor on, triggers reminder
-4. **Notification**: Sends Windows Toast notification: "Look away 20 ft"
-5. **Audio Alert**: Plays Slack huddle sound (optional, respects system mute state)
-6. **Volume Adaptation**: Adjusts notification volume based on system volume and Bluetooth connection
+1. **Startup Check**: Verifies if another instance is already running by checking the log file timestamp
+   - If a log entry exists within the last 18 minutes, exits immediately to prevent duplicates
+   - This allows safe periodic scheduling (e.g., every 15 minutes via Task Scheduler)
+2. **Initialization**: Loads audio file and initializes system audio interface
+3. **Monitor Check**: Continuously monitors if your display is active
+4. **Eye Break Timer**: When 20 minutes elapse with monitor on, triggers reminder
+5. **Notification**: Sends Windows Toast notification: "Look away 20 ft"
+6. **Audio Alert**: Plays Slack huddle sound (optional, respects system mute state)
 7. **Daily Reset**: Log resets at midnight each day
 
 ## Files
@@ -69,6 +71,27 @@ Audio notification files can be replaced with custom `.wav` files. Update the pa
 ```python
 audio_file = "C:\\path\\to\\your\\notification.wav"
 ```
+
+### Windows Task Scheduler Setup
+
+For automatic startup on login or screen events, configure Windows Task Scheduler:
+
+1. Open Task Scheduler (`taskschd.msc`)
+2. Create a new basic task:
+   - **Name**: "Ultimate Eye Rest"
+   - **Trigger**: Choose one or more:
+     - "At log on" (runs when you log in)
+     - "On workstation unlock" (runs when screen is unlocked)
+     - "On a schedule" set to every 15 minutes
+   - **Action**: Start a program
+     - Program: `python.exe` or `C:\path\to\python.exe`
+     - Arguments: `C:\path\to\20_20_20.py`
+     - Start in: `C:\Users\<YourUsername>\Documents\ultimate_eye_rest`
+3. **Important**: In "Advanced Settings", check:
+   - ✓ "Run with highest privileges" (if needed for audio control)
+   - ✓ "Run whether user is logged in or not" (optional, for background operation)
+
+**Why 15 minutes?** The script exits if already running (checks log from last 18 minutes). Scheduling every 15 minutes ensures it will pick up eye break monitoring even after screen lock, sleep, or wake events without creating duplicates.
 
 ## Use Cases
 
@@ -89,6 +112,14 @@ Logs reset daily at midnight.
 ## Notes
 
 - Application runs in the background; no UI required
-- Best used with Windows Task Scheduler for automatic startup
+- **Duplicate Prevention**: Script automatically exits if another instance is running (within last 18 minutes), making it safe to trigger frequently via Task Scheduler
+- Best used with Windows Task Scheduler set to run every 15 minutes on login, unlock, and on schedule
 - Respects system mute and volume settings
 - Pause reminders by turning off monitor or muting system audio
+- Log file (`log.txt`) shows when instances attempted to run—check it if eye break reminders aren't appearing
+
+## Troubleshooting
+
+- **No reminders appearing?** Check `log.txt` to see if the script is running. If the last entry is an exit message, another instance may still be active.
+- **Task Scheduler not triggering?** Ensure Python path is correct and use absolute paths. Test manually first: `python C:\path\to\20_20_20.py`
+- **Audio not playing?** Verify `slack_huddle_invite.wav` exists and volume is not muted system-wide.
