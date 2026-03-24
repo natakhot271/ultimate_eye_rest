@@ -183,11 +183,11 @@ if __name__ == "__main__":
 
         while is_monitor_on() and day == datetime.now().day:
             for i in range(MINUTES):
-                log('mins '+str(i))
+                #log('mins '+str(i))
                 time.sleep(60)
                 if not is_monitor_on():
                     break
-            log('mins'+str(i+1))
+            #log('mins'+str(i+1))
             log(str(datetime.now())+'\n')
 
             try:
