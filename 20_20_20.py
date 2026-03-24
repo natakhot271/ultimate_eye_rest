@@ -1,6 +1,7 @@
 import wmi
 import time
 import os
+import msvcrt
 from datetime import datetime
 #from playsound import playsound
 from scipy.io import wavfile
@@ -128,36 +129,15 @@ def notify_eye_break(state):
         notification_str += '\n\nVolume is off'
     send_notification("20 20 20", notification_str)
 
-def is_log_active():
-    """Check if another instance is already running based on recent log activity."""
-    log_file = "C:\\Users\\natal\\Documents\\ultimate_eye_rest\\log.txt"
-    
-    if not os.path.exists(log_file):
-        return False
-    
-    with open(log_file, 'r') as file:
-        lines = file.readlines()
-        if not lines:
-            return False
-        
-        # Check the last line only
-        last_line = lines[-1].strip()
-        if not last_line:
-            return False
-        
-        try:
-            last_time = datetime.fromisoformat(last_line)
-            time_diff_seconds = (datetime.now() - last_time).total_seconds()
-            return time_diff_seconds <= (MINUTES + 1) * 60
-        except ValueError:
-            return False
-
-    return False
-
 MINUTES = 17
 
 if __name__ == "__main__":
-    if is_log_active():
+    # Acquire exclusive write lock on log file
+    log_file = "C:\\Users\\natal\\Documents\\ultimate_eye_rest\\log.txt"
+    try:
+        lock_handle = open(log_file, 'a')
+        msvcrt.locking(lock_handle.fileno(), msvcrt.LK_NBLCK, 1)
+    except (IOError, OSError):
         print("Program already running. Exiting.")
         exit()
     
