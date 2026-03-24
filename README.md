@@ -48,7 +48,7 @@ cscript 20_20_20.vbs
 ## How It Works
 
 1. **Startup Check**: Verifies if another instance is already running by checking the log file timestamp
-   - If a log entry exists within the last 18 minutes, exits immediately to prevent duplicates
+   - If a log file is locked, exits immediately to prevent duplicates
    - This allows safe periodic scheduling (e.g., every 15 minutes via Task Scheduler)
 2. **Initialization**: Loads audio file and initializes system audio interface
 3. **Monitor Check**: Continuously monitors if your display is active
