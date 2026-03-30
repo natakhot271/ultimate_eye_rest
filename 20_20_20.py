@@ -52,14 +52,14 @@ def volume_db_to_frac(vol):
 def volume_frac_to_db(vol):
     return int(vol * (max_db - min_db) + min_db)
 
-def restart_log():
-    log('restarting log')
-    with open("C:\\Users\\natal\\Documents\\ultimate_eye_rest\\log.txt", 'w'):
-        pass
+def restart_log(lock_handle):
+    log(lock_handle, 'restarting log')
+    lock_handle.truncate(0)
+    lock_handle.seek(0)
     
-def log(s):
-    with open("C:\\Users\\natal\\Documents\\ultimate_eye_rest\\log.txt", 'a') as file:
-        file.write(s+'\n')
+def log(lock_handle, s):
+    lock_handle.write(s+'\n')
+    lock_handle.flush()
     print(s)
 
 def is_bluetooth_connected():
@@ -105,12 +105,12 @@ def play_volume(audio):
     wavfile.write(modified_audio_file, audio_rate, audio)
     play_audio(modified_audio_file)
 
-def is_monitor_on():
+def is_monitor_on(lock_handle):
     try:
         c = wmi.WMI(namespace='root\\wmi')
         monitors = c.WmiMonitorBasicDisplayParams()
     except Exception as e:
-        log(f"Error: {e}")
+        log(lock_handle, f"Error: {e}")
         return False
     
     awake = False
@@ -144,46 +144,46 @@ if __name__ == "__main__":
     awake = True
     day = datetime.now().day
     i = 0
-    restart_log()
+    restart_log(lock_handle)
     while True:
         if day != datetime.now().day:
-            restart_log()
+            restart_log(lock_handle)
             day = datetime.now().day
             awake = True
             i = 0
 
-        if is_monitor_on():
+        if is_monitor_on(lock_handle):
             awake = True
-            log('monitor is on') 
+            log(lock_handle, 'monitor is on') 
             
             if get_system_volume() > 0:
-                log('volume is on')
+                log(lock_handle, 'volume is on')
             else:
-                log('volume is off')
+                log(lock_handle, 'volume is off')
 
-        while is_monitor_on() and day == datetime.now().day:
+        while is_monitor_on(lock_handle) and day == datetime.now().day:
             for i in range(MINUTES):
                 #log('mins '+str(i))
                 time.sleep(60)
-                if not is_monitor_on():
+                if not is_monitor_on(lock_handle):
                     break
             #log('mins'+str(i+1))
-            log(str(datetime.now())+'\n')
+            log(lock_handle, str(datetime.now())+'\n')
 
             try:
                 notify_eye_break("start")
                 time.sleep(21)
                 notify_eye_break("stop")
             except Exception as e:
-                log(str(e))
+                log(lock_handle, str(e))
                 raise e
             
-        if not is_monitor_on():
+        if not is_monitor_on(lock_handle):
             if awake:
-                log('monitor is off')
-                log(str(datetime.now())+'\n')
+                log(lock_handle, 'monitor is off')
+                log(lock_handle, str(datetime.now())+'\n')
             elif (i + 1) % (6 * 60) == 0:
-                log(".")
+                log(lock_handle, ".")
 
             awake = False
             i += 1
